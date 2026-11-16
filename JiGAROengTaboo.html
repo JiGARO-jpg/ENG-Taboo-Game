@@ -1,0 +1,2419 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  
+  <!-- PWA & Home Screen Meta Tags (iOS & Android) -->
+  <title>TABOO — English Party & Vocabulary Game</title>
+  <meta name="description" content="Minimalist black & yellow English Taboo party and CEFR A1–C2 vocabulary game. Installable on iOS and Android." />
+  <meta name="theme-color" content="#09090B" />
+  <meta name="background-color" content="#09090B" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TABOO" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="TABOO" />
+  <meta name="format-detection" content="telephone=no" />
+
+  <!-- Geometric Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            display: ['Space Grotesk', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            obsidian: '#09090B',
+            surface: '#121215',
+            elevated: '#18181B',
+            borderdark: '#27272A',
+            electric: '#FACC15',
+            electricHover: '#EAB308',
+            offwhite: '#FAFAFA',
+            muted: '#A1A1AA',
+            correct: '#22C55E',
+            taboo: '#EF4444',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root {
+      --bg-obsidian: #09090B;
+      --bg-surface: #121215;
+      --bg-elevated: #18181B;
+      --border-dark: #27272A;
+      --accent-yellow: #FACC15;
+      --text-primary: #FAFAFA;
+      --text-muted: #A1A1AA;
+      --color-green: #22C55E;
+      --color-red: #EF4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    input, textarea, select {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg-obsidian);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overscroll-behavior: none;
+    }
+
+    /* Safe-area support for iPhone/Android notches and home indicators */
+    .safe-top {
+      padding-top: max(0.65rem, env(safe-area-inset-top));
+    }
+
+    .safe-bottom {
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+
+    /* Custom sleek scrollbars for deck list & setup */
+    .custom-scroll {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: #27272A transparent;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background-color: #27272A;
+      border-radius: 9999px;
+    }
+
+    /* Card entrance & feedback animations */
+    @keyframes cardEnter {
+      0% {
+        opacity: 0;
+        transform: translateY(14px) scale(0.97);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .animate-card-enter {
+      animation: cardEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes pulseDanger {
+      0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 14px rgba(239, 68, 68, 0.55);
+      }
+      50% {
+        opacity: 0.65;
+        box-shadow: 0 0 4px rgba(239, 68, 68, 0.2);
+      }
+    }
+
+    .timer-danger {
+      background-color: #EF4444 !important;
+      animation: pulseDanger 0.75s infinite ease-in-out;
+    }
+
+    @keyframes flashGreen {
+      0% { box-shadow: inset 0 0 0 2px #22C55E, 0 0 28px rgba(34, 197, 94, 0.35); }
+      100% { box-shadow: inset 0 0 0 0px transparent, 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    @keyframes flashRed {
+      0% { box-shadow: inset 0 0 0 2px #EF4444, 0 0 28px rgba(239, 68, 68, 0.35); }
+      100% { box-shadow: inset 0 0 0 0px transparent, 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .flash-correct {
+      animation: flashGreen 0.35s ease-out;
+    }
+
+    .flash-taboo {
+      animation: flashRed 0.35s ease-out;
+    }
+
+    /* Tactile button press */
+    .btn-press {
+      transition: transform 0.1s cubic-bezier(0.2, 0, 0, 1), background-color 0.15s ease, border-color 0.15s ease;
+    }
+    .btn-press:active {
+      transform: scale(0.96);
+    }
+  </style>
+</head>
+<body class="bg-obsidian text-offwhite antialiased selection:bg-electric selection:text-obsidian">
+
+  <!-- Root App Shell (100dvh, mobile-first flex column) -->
+  <div id="app" class="w-full h-[100dvh] max-w-lg mx-auto flex flex-col bg-obsidian relative overflow-hidden sm:border-x sm:border-borderdark">
+
+    <!-- Top Persistent Bar -->
+    <header id="top-bar" class="safe-top px-4 pb-2.5 bg-obsidian/95 backdrop-blur-md border-b border-borderdark flex items-center justify-between gap-2 shrink-0 z-20">
+      <!-- Brand Logo -->
+      <button id="brand-btn" type="button" class="flex items-center gap-2.5 text-left focus:outline-none group">
+        <div class="w-8 h-8 rounded-lg bg-electric flex items-center justify-center shadow-[0_0_16px_rgba(250,204,21,0.28)] group-active:scale-95 transition-transform">
+          <span class="font-display font-black text-obsidian text-lg tracking-tighter leading-none">T</span>
+        </div>
+        <div>
+          <div class="font-display font-bold text-base tracking-wider text-offwhite leading-none flex items-center gap-1.5">
+            TABOO
+            <span class="text-[10px] font-sans font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-elevated text-electric border border-borderdark">EN</span>
+          </div>
+          <p class="text-[10px] text-muted tracking-wide mt-0.5">A1–C2 EDITION</p>
+        </div>
+      </button>
+
+      <!-- Header Right Controls -->
+      <div class="flex items-center gap-1.5">
+        <!-- Audio Mute/Unmute Toggle -->
+        <button id="btn-mute" type="button" aria-label="Toggle Sound" title="Toggle Sound Effects"
+          class="btn-press w-9 h-9 rounded-xl bg-surface border border-borderdark flex items-center justify-center text-offwhite hover:border-electric/60">
+          <!-- Icon injected via JS -->
+        </button>
+
+        <!-- Install / Add to Home Screen Button -->
+        <button id="btn-install-header" type="button"
+          class="btn-press h-9 px-3 rounded-xl bg-electric text-obsidian font-bold text-xs tracking-wide flex items-center gap-1.5 shadow-[0_0_14px_rgba(250,204,21,0.2)]">
+          <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v12m0 0l-4-4m4 4l4-4" />
+            <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+          </svg>
+          <span id="install-btn-label">Install</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Primary Navigation Bar (Visible on Setup & Deck views) -->
+    <nav id="main-nav" class="px-4 pt-2.5 pb-1 bg-obsidian shrink-0 z-10">
+      <div class="grid grid-cols-2 p-1 rounded-2xl bg-surface border border-borderdark">
+        <button id="nav-play" type="button"
+          class="btn-press py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 bg-electric text-obsidian shadow-sm">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          Play Game
+        </button>
+        <button id="nav-deck" type="button"
+          class="btn-press py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 text-muted hover:text-offwhite">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <span>Vocabulary</span>
+          <span id="nav-custom-badge" class="hidden text-[10px] px-1.5 py-0.2 rounded-full bg-elevated text-electric border border-borderdark">0</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Dynamic View Container -->
+    <main id="view-container" class="flex-1 min-h-0 flex flex-col relative overflow-hidden">
+      <!-- Views are dynamically rendered here for crisp state transitions -->
+    </main>
+
+    <!-- Floating Toast Notification Container -->
+    <div id="toast-container" class="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex flex-col items-center gap-2 px-4"></div>
+
+    <!-- Modal Overlay Container (Install Guide, Pause Menu, Confirmations) -->
+    <div id="modal-backdrop" class="hidden fixed inset-0 z-40 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div id="modal-content" class="w-full max-w-md bg-surface border-t sm:border border-borderdark rounded-t-3xl sm:rounded-3xl p-5 safe-bottom shadow-2xl transform transition-all">
+        <!-- Dynamic modal body -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Application Logic & PWA Bootstrap -->
+  <script>
+    /**
+     * ============================================================================
+     * 1. DYNAMIC PWA ICON & MANIFEST GENERATOR (iOS & Android Home Screen Support)
+     * ============================================================================
+     */
+    (function initDynamicPWA() {
+      try {
+        function generateTabooIconDataURL(size) {
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          const r = Math.round(size * 0.22);
+
+          // Obsidian background rounded square
+          ctx.fillStyle = '#09090B';
+          ctx.beginPath();
+          ctx.roundRect(0, 0, size, size, r);
+          ctx.fill();
+
+          // Subtle electric yellow outer frame
+          const pad = Math.round(size * 0.06);
+          const innerR = Math.round(size * 0.17);
+          ctx.strokeStyle = '#FACC15';
+          ctx.lineWidth = Math.max(2, Math.round(size * 0.032));
+          ctx.beginPath();
+          ctx.roundRect(pad, pad, size - pad * 2, size - pad * 2, innerR);
+          ctx.stroke();
+
+          // Elevated inner card motif
+          const cardPad = Math.round(size * 0.15);
+          ctx.fillStyle = '#18181B';
+          ctx.beginPath();
+          ctx.roundRect(cardPad, cardPad, size - cardPad * 2, size - cardPad * 2, Math.round(size * 0.11));
+          ctx.fill();
+
+          // Bold Electric Yellow "T" Emblem
+          ctx.fillStyle = '#FACC15';
+          ctx.font = `900 ${Math.round(size * 0.52)}px Inter, -apple-system, BlinkMacSystemFont, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('T', size / 2, size * 0.535);
+
+          // Minimalist prohibition slash accent bar underneath T
+          const barW = Math.round(size * 0.34);
+          const barH = Math.max(3, Math.round(size * 0.042));
+          ctx.fillStyle = '#FAFAFA';
+          ctx.beginPath();
+          ctx.roundRect((size - barW) / 2, Math.round(size * 0.76), barW, barH, barH / 2);
+          ctx.fill();
+
+          return canvas.toDataURL('image/png');
+        }
+
+        const icon180 = generateTabooIconDataURL(180);
+        const icon192 = generateTabooIconDataURL(192);
+        const icon512 = generateTabooIconDataURL(512);
+
+        // Inject Apple Touch Icon for iOS Safari "Add to Home Screen"
+        const appleIcon = document.createElement('link');
+        appleIcon.rel = 'apple-touch-icon';
+        appleIcon.sizes = '180x180';
+        appleIcon.href = icon180;
+        document.head.appendChild(appleIcon);
+
+        // Inject Standard Favicon
+        const favIcon = document.createElement('link');
+        favIcon.rel = 'icon';
+        favIcon.type = 'image/png';
+        favIcon.href = icon192;
+        document.head.appendChild(favIcon);
+
+        // Create Blob-based Web App Manifest
+        const manifestObj = {
+          name: 'TABOO — English Party & Vocabulary Game',
+          short_name: 'TABOO',
+          description: 'Minimalist black & yellow English Taboo party game with CEFR A1–C2 decks and custom word builder.',
+          start_url: window.location.href,
+          display: 'standalone',
+          orientation: 'portrait',
+          background_color: '#09090B',
+          theme_color: '#09090B',
+          categories: ['games', 'education', 'entertainment'],
+          icons: [
+            {
+              src: icon192,
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any maskable'
+            },
+            {
+              src: icon512,
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any maskable'
+            }
+          ]
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = manifestURL;
+        document.head.appendChild(manifestLink);
+
+        // Register lightweight Service Worker when supported over HTTP/HTTPS
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+          const swCode = `
+            const CACHE_NAME = 'taboo-pwa-v1';
+            self.addEventListener('install', (e) => { self.skipWaiting(); });
+            self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
+            self.addEventListener('fetch', (e) => {
+              e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+            });
+          `;
+          const swBlob = new Blob([swCode], { type: 'application/javascript' });
+          const swUrl = URL.createObjectURL(swBlob);
+          navigator.serviceWorker.register(swUrl).catch(() => {
+            // Silently ignore in sandboxed iframe environments
+          });
+        }
+      } catch (err) {
+        console.warn('PWA dynamic asset initialization skipped:', err);
+      }
+    })();
+
+    /**
+     * ============================================================================
+     * 2. CURATED CEFR A1–C2 VOCABULARY DATABASE (78 CARDS — 13 PER LEVEL)
+     * ============================================================================
+     */
+    const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+
+    const CEFR_DESCRIPTIONS = {
+      A1: 'Beginner',
+      A2: 'Elementary',
+      B1: 'Intermediate',
+      B2: 'Upper-Int.',
+      C1: 'Advanced',
+      C2: 'Proficiency'
+    };
+
+    const BUILTIN_CARDS = [
+      // ==================== A1 (BEGINNER — 13 CARDS) ====================
+      { id: 'a1-1', level: 'A1', word: 'APPLE', forbidden: ['FRUIT', 'RED', 'TREE', 'EAT', 'IPHONE'] },
+      { id: 'a1-2', level: 'A1', word: 'TEACHER', forbidden: ['SCHOOL', 'STUDENT', 'CLASS', 'LEARN', 'LESSON'] },
+      { id: 'a1-3', level: 'A1', word: 'HOUSE', forbidden: ['HOME', 'LIVE', 'DOOR', 'ROOM', 'BUILDING'] },
+      { id: 'a1-4', level: 'A1', word: 'WATER', forbidden: ['DRINK', 'THIRSTY', 'RIVER', 'OCEAN', 'BOTTLE'] },
+      { id: 'a1-5', level: 'A1', word: 'DOG', forbidden: ['PET', 'BARK', 'CAT', 'ANIMAL', 'PUPPY'] },
+      { id: 'a1-6', level: 'A1', word: 'BOOK', forbidden: ['READ', 'PAGE', 'STORY', 'LIBRARY', 'PAPER'] },
+      { id: 'a1-7', level: 'A1', word: 'TRAIN', forbidden: ['STATION', 'RAILWAY', 'TICKET', 'TRAVEL', 'BUS'] },
+      { id: 'a1-8', level: 'A1', word: 'SUN', forbidden: ['YELLOW', 'SKY', 'HOT', 'DAY', 'LIGHT'] },
+      { id: 'a1-9', level: 'A1', word: 'COFFEE', forbidden: ['DRINK', 'MORNING', 'CUP', 'TEA', 'CAFFEINE'] },
+      { id: 'a1-10', level: 'A1', word: 'HOSPITAL', forbidden: ['DOCTOR', 'NURSE', 'SICK', 'MEDICINE', 'PATIENT'] },
+      { id: 'a1-11', level: 'A1', word: 'PHONE', forbidden: ['CALL', 'NUMBER', 'MOBILE', 'MESSAGE', 'SCREEN'] },
+      { id: 'a1-12', level: 'A1', word: 'WINTER', forbidden: ['COLD', 'SNOW', 'SEASON', 'SUMMER', 'DECEMBER'] },
+      { id: 'a1-13', level: 'A1', word: 'BREAKFAST', forbidden: ['MORNING', 'EAT', 'EGGS', 'LUNCH', 'DINNER'] },
+
+      // ==================== A2 (ELEMENTARY — 13 CARDS) ====================
+      { id: 'a2-1', level: 'A2', word: 'AIRPORT', forbidden: ['PLANE', 'FLIGHT', 'PASSPORT', 'TRAVEL', 'PILOT'] },
+      { id: 'a2-2', level: 'A2', word: 'RECIPE', forbidden: ['COOK', 'FOOD', 'INGREDIENTS', 'KITCHEN', 'INSTRUCTIONS'] },
+      { id: 'a2-3', level: 'A2', word: 'UMBRELLA', forbidden: ['RAIN', 'WET', 'WEATHER', 'OPEN', 'DRY'] },
+      { id: 'a2-4', level: 'A2', word: 'DENTIST', forbidden: ['TEETH', 'TOOTHACHE', 'DOCTOR', 'MOUTH', 'BRUSH'] },
+      { id: 'a2-5', level: 'A2', word: 'NEIGHBOR', forbidden: ['NEXT', 'DOOR', 'HOUSE', 'LIVE', 'PERSON'] },
+      { id: 'a2-6', level: 'A2', word: 'BICYCLE', forbidden: ['RIDE', 'WHEELS', 'PEDAL', 'HELMET', 'CAR'] },
+      { id: 'a2-7', level: 'A2', word: 'CALENDAR', forbidden: ['DATE', 'MONTH', 'YEAR', 'DAYS', 'WEEK'] },
+      { id: 'a2-8', level: 'A2', word: 'MUSEUM', forbidden: ['ART', 'HISTORY', 'PAINTING', 'OLD', 'VISIT'] },
+      { id: 'a2-9', level: 'A2', word: 'SUITCASE', forbidden: ['PACK', 'CLOTHES', 'VACATION', 'BAG', 'TRAVEL'] },
+      { id: 'a2-10', level: 'A2', word: 'THUNDER', forbidden: ['STORM', 'LIGHTNING', 'LOUD', 'SOUND', 'RAIN'] },
+      { id: 'a2-11', level: 'A2', word: 'LIBRARY', forbidden: ['BOOKS', 'QUIET', 'BORROW', 'READ', 'STUDY'] },
+      { id: 'a2-12', level: 'A2', word: 'MIRROR', forbidden: ['GLASS', 'FACE', 'LOOK', 'REFLECTION', 'BATHROOM'] },
+      { id: 'a2-13', level: 'A2', word: 'ELEVATOR', forbidden: ['LIFT', 'STAIRS', 'FLOOR', 'BUILDING', 'UP'] },
+
+      // ==================== B1 (INTERMEDIATE — 13 CARDS) ====================
+      { id: 'b1-1', level: 'B1', word: 'PASSPORT', forbidden: ['COUNTRY', 'BORDER', 'TRAVEL', 'PHOTO', 'IDENTITY'] },
+      { id: 'b1-2', level: 'B1', word: 'INTERVIEW', forbidden: ['JOB', 'QUESTIONS', 'HIRE', 'COMPANY', 'RESUME'] },
+      { id: 'b1-3', level: 'B1', word: 'VOLUNTEER', forbidden: ['HELP', 'FREE', 'MONEY', 'CHARITY', 'WORK'] },
+      { id: 'b1-4', level: 'B1', word: 'RECYCLE', forbidden: ['PLASTIC', 'PAPER', 'ENVIRONMENT', 'TRASH', 'GREEN'] },
+      { id: 'b1-5', level: 'B1', word: 'TRADITION', forbidden: ['CULTURE', 'CUSTOM', 'OLD', 'HOLIDAY', 'FAMILY'] },
+      { id: 'b1-6', level: 'B1', word: 'SYMPTOM', forbidden: ['SICK', 'ILLNESS', 'FEVER', 'SIGN', 'DOCTOR'] },
+      { id: 'b1-7', level: 'B1', word: 'SOUVENIR', forbidden: ['VACATION', 'GIFT', 'REMEMBER', 'TOURIST', 'BUY'] },
+      { id: 'b1-8', level: 'B1', word: 'DEADLINE', forbidden: ['TIME', 'FINISH', 'LATE', 'PROJECT', 'DATE'] },
+      { id: 'b1-9', level: 'B1', word: 'LANDSCAPE', forbidden: ['NATURE', 'VIEW', 'MOUNTAINS', 'SCENERY', 'PAINTING'] },
+      { id: 'b1-10', level: 'B1', word: 'COMPROMISE', forbidden: ['AGREE', 'ARGUMENT', 'BOTH', 'MIDDLE', 'SOLUTION'] },
+      { id: 'b1-11', level: 'B1', word: 'ALGORITHM', forbidden: ['COMPUTER', 'CODE', 'SOCIAL MEDIA', 'MATH', 'FORMULA'] },
+      { id: 'b1-12', level: 'B1', word: 'EXHIBITION', forbidden: ['GALLERY', 'ART', 'SHOW', 'DISPLAY', 'PUBLIC'] },
+      { id: 'b1-13', level: 'B1', word: 'GENERATION', forbidden: ['AGE', 'PARENTS', 'CHILDREN', 'YOUNG', 'OLD'] },
+
+      // ==================== B2 (UPPER-INTERMEDIATE — 13 CARDS) ====================
+      { id: 'b2-1', level: 'B2', word: 'PROCRASTINATE', forbidden: ['DELAY', 'LATER', 'LAZY', 'WORK', 'POSTPONE'] },
+      { id: 'b2-2', level: 'B2', word: 'STEREOTYPE', forbidden: ['ASSUME', 'GROUP', 'LABEL', 'PREJUDICE', 'GENERALIZE'] },
+      { id: 'b2-3', level: 'B2', word: 'SUSTAINABLE', forbidden: ['ENVIRONMENT', 'FUTURE', 'GREEN', 'ENERGY', 'RESOURCES'] },
+      { id: 'b2-4', level: 'B2', word: 'CONSPIRACY', forbidden: ['SECRET', 'THEORY', 'GOVERNMENT', 'PLOT', 'HIDDEN'] },
+      { id: 'b2-5', level: 'B2', word: 'INFLATION', forbidden: ['PRICES', 'MONEY', 'ECONOMY', 'EXPENSIVE', 'RISE'] },
+      { id: 'b2-6', level: 'B2', word: 'EMPATHY', forbidden: ['FEELINGS', 'UNDERSTAND', 'SHOES', 'SYMPATHY', 'CARE'] },
+      { id: 'b2-7', level: 'B2', word: 'PHENOMENON', forbidden: ['EVENT', 'RARE', 'STRANGE', 'NATURE', 'OBSERVE'] },
+      { id: 'b2-8', level: 'B2', word: 'CONTROVERSY', forbidden: ['DEBATE', 'DISAGREE', 'PUBLIC', 'SCANDAL', 'OPINION'] },
+      { id: 'b2-9', level: 'B2', word: 'ANONYMOUS', forbidden: ['NAME', 'SECRET', 'UNKNOWN', 'IDENTITY', 'HIDE'] },
+      { id: 'b2-10', level: 'B2', word: 'BREAKTHROUGH', forbidden: ['DISCOVERY', 'SCIENCE', 'PROGRESS', 'NEW', 'SUCCESS'] },
+      { id: 'b2-11', level: 'B2', word: 'NOSTALGIA', forbidden: ['PAST', 'MEMORY', 'CHILDHOOD', 'MISS', 'OLD'] },
+      { id: 'b2-12', level: 'B2', word: 'RESILIENCE', forbidden: ['RECOVER', 'STRONG', 'TOUGH', 'BOUNCE', 'DIFFICULT'] },
+      { id: 'b2-13', level: 'B2', word: 'DILEMMA', forbidden: ['CHOICE', 'PROBLEM', 'TWO', 'DECISION', 'DIFFICULT'] },
+
+      // ==================== C1 (ADVANCED — 13 CARDS) ====================
+      { id: 'c1-1', level: 'C1', word: 'AMBIGUOUS', forbidden: ['UNCLEAR', 'MEANING', 'VAGUE', 'DOUBLE', 'CONFUSING'] },
+      { id: 'c1-2', level: 'C1', word: 'SCRUTINY', forbidden: ['EXAMINE', 'CLOSE', 'INSPECT', 'CRITICISM', 'CAREFUL'] },
+      { id: 'c1-3', level: 'C1', word: 'PARADOX', forbidden: ['CONTRADICTION', 'IMPOSSIBLE', 'TRUE', 'LOGIC', 'OPPOSITE'] },
+      { id: 'c1-4', level: 'C1', word: 'BUREAUCRACY', forbidden: ['GOVERNMENT', 'PAPERWORK', 'RULES', 'SLOW', 'OFFICIALS'] },
+      { id: 'c1-5', level: 'C1', word: 'PRAGMATIC', forbidden: ['PRACTICAL', 'REALISTIC', 'SENSIBLE', 'THEORY', 'SOLVE'] },
+      { id: 'c1-6', level: 'C1', word: 'UNPRECEDENTED', forbidden: ['NEVER', 'BEFORE', 'FIRST', 'HISTORY', 'UNIQUE'] },
+      { id: 'c1-7', level: 'C1', word: 'HYPOCRISY', forbidden: ['PREACH', 'PRETEND', 'FAKE', 'STANDARDS', 'MORAL'] },
+      { id: 'c1-8', level: 'C1', word: 'PLAGIARISM', forbidden: ['COPY', 'STEAL', 'WRITE', 'CREDIT', 'ESSAY'] },
+      { id: 'c1-9', level: 'C1', word: 'METICULOUS', forbidden: ['CAREFUL', 'DETAIL', 'PRECISE', 'PERFECTIONIST', 'THOROUGH'] },
+      { id: 'c1-10', level: 'C1', word: 'ALTRUISM', forbidden: ['SELFLESS', 'HELP', 'OTHERS', 'GENEROUS', 'CHARITY'] },
+      { id: 'c1-11', level: 'C1', word: 'UBIQUITOUS', forbidden: ['EVERYWHERE', 'COMMON', 'ALL', 'PRESENT', 'CONSTANT'] },
+      { id: 'c1-12', level: 'C1', word: 'CATALYST', forbidden: ['CHANGE', 'SPEED', 'REACTION', 'TRIGGER', 'CAUSE'] },
+      { id: 'c1-13', level: 'C1', word: 'COMPLACENT', forbidden: ['SATISFIED', 'LAZY', 'EFFORT', 'COMFORTABLE', 'IMPROVE'] },
+
+      // ==================== C2 (PROFICIENCY — 13 CARDS) ====================
+      { id: 'c2-1', level: 'C2', word: 'EPHEMERAL', forbidden: ['SHORT', 'TEMPORARY', 'BRIEF', 'LASTING', 'FLEETING'] },
+      { id: 'c2-2', level: 'C2', word: 'CACOPHONY', forbidden: ['NOISE', 'LOUD', 'HARSH', 'SOUND', 'CHAOS'] },
+      { id: 'c2-3', level: 'C2', word: 'OBFUSCATE', forbidden: ['CONFUSE', 'HIDE', 'UNCLEAR', 'COMPLICATE', 'TRUTH'] },
+      { id: 'c2-4', level: 'C2', word: 'SYCOPHANT', forbidden: ['FLATTER', 'PRAISE', 'YES-MAN', 'POWERFUL', 'FAKE'] },
+      { id: 'c2-5', level: 'C2', word: 'SERENDIPITY', forbidden: ['LUCK', 'ACCIDENT', 'HAPPY', 'FIND', 'CHANCE'] },
+      { id: 'c2-6', level: 'C2', word: 'QUINTESSENTIAL', forbidden: ['PERFECT', 'EXAMPLE', 'ULTIMATE', 'CLASSIC', 'ESSENCE'] },
+      { id: 'c2-7', level: 'C2', word: 'MAGNANIMOUS', forbidden: ['GENEROUS', 'FORGIVING', 'NOBLE', 'ENEMY', 'KIND'] },
+      { id: 'c2-8', level: 'C2', word: 'ICONOCLAST', forbidden: ['TRADITION', 'BELIEFS', 'REBEL', 'CHALLENGE', 'DESTROY'] },
+      { id: 'c2-9', level: 'C2', word: 'PERSPICACIOUS', forbidden: ['INSIGHT', 'SHARP', 'CLEVER', 'OBSERVANT', 'UNDERSTAND'] },
+      { id: 'c2-10', level: 'C2', word: 'EQUANIMITY', forbidden: ['CALM', 'BALANCE', 'STRESS', 'COMPOSURE', 'PEACE'] },
+      { id: 'c2-11', level: 'C2', word: 'SOLILOQUY', forbidden: ['SPEECH', 'ALONE', 'THEATER', 'SHAKESPEARE', 'THOUGHTS'] },
+      { id: 'c2-12', level: 'C2', word: 'ENNUI', forbidden: ['BOREDOM', 'TIRED', 'LISTLESS', 'DISSATISFACTION', 'FRENCH'] },
+      { id: 'c2-13', level: 'C2', word: 'SCHADENFREUDE', forbidden: ['PLEASURE', 'MISFORTUNE', 'OTHERS', 'PAIN', 'GERMAN'] }
+    ].map(c => ({ ...c, isCustom: false }));
+
+    /**
+     * ============================================================================
+     * 3. SAFE STORAGE HELPER & AUDIO/HAPTICS ENGINE (WEB AUDIO API)
+     * ============================================================================
+     */
+    const SafeStorage = {
+      _mem: {},
+      get(key, fallback = null) {
+        try {
+          const val = window.localStorage.getItem(key);
+          return val !== null ? JSON.parse(val) : fallback;
+        } catch (e) {
+          return key in this._mem ? this._mem[key] : fallback;
+        }
+      },
+      set(key, value) {
+        this._mem[key] = value;
+        try {
+          window.localStorage.setItem(key, JSON.stringify(value));
+        } catch (e) {
+          // Graceful fallback in memory if storage quota/sandbox blocks write
+        }
+      }
+    };
+
+    const SoundEngine = {
+      ctx: null,
+      muted: Boolean(SafeStorage.get('taboo_muted_v1', false)),
+
+      init() {
+        try {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+              this.ctx = new AudioCtx();
+            }
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+        } catch (e) {
+          // AudioContext blocked or unavailable
+        }
+      },
+
+      toggleMute() {
+        this.muted = !this.muted;
+        SafeStorage.set('taboo_muted_v1', this.muted);
+        if (!this.muted) {
+          this.init();
+          this.playTap();
+        }
+        return this.muted;
+      },
+
+      vibrate(pattern) {
+        try {
+          if (navigator && typeof navigator.vibrate === 'function') {
+            navigator.vibrate(pattern);
+          }
+        } catch (e) {}
+      },
+
+      playTap() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(520, now);
+          osc.frequency.exponentialRampToValueAtTime(320, now + 0.045);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } catch (e) {}
+      },
+
+      playCorrect() {
+        this.vibrate(35);
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          const freqs = [523.25, 659.25, 783.99]; // C5 - E5 - G5 major triad chime
+          freqs.forEach((f, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            const t = now + idx * 0.055;
+            osc.frequency.setValueAtTime(f, t);
+            gain.gain.setValueAtTime(0.001, t);
+            gain.gain.linearRampToValueAtTime(0.18, t + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.24);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.25);
+          });
+        } catch (e) {}
+      },
+
+      playTaboo() {
+        this.vibrate([70, 40, 90]);
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          [135, 142].forEach((freq) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, now);
+            osc.frequency.linearRampToValueAtTime(freq * 0.86, now + 0.32);
+            gain.gain.setValueAtTime(0.14, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.35);
+          });
+        } catch (e) {}
+      },
+
+      playSkip() {
+        this.vibrate(20);
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(360, now);
+          osc.frequency.exponentialRampToValueAtTime(240, now + 0.11);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        } catch (e) {}
+      },
+
+      playTick(isUrgent = false) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(isUrgent ? 980 : 780, now);
+          gain.gain.setValueAtTime(isUrgent ? 0.12 : 0.07, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.065);
+        } catch (e) {}
+      },
+
+      playEndHorn() {
+        this.vibrate([180, 70, 240]);
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          const pulses = [
+            { start: 0, dur: 0.18, freq: 220 },
+            { start: 0.22, dur: 0.42, freq: 164.81 }
+          ];
+          pulses.forEach((p) => {
+            [p.freq, p.freq * 1.5].forEach((f) => {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = 'sawtooth';
+              osc.frequency.setValueAtTime(f, now + p.start);
+              gain.gain.setValueAtTime(0.13, now + p.start);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + p.start + p.dur);
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+              osc.start(now + p.start);
+              osc.stop(now + p.start + p.dur + 0.02);
+            });
+          });
+        } catch (e) {}
+      }
+    };
+
+    /**
+     * ============================================================================
+     * 4. APPLICATION STATE & DECK SHUFFLE ENGINE
+     * ============================================================================
+     */
+    const state = {
+      screen: 'setup', // 'setup' | 'ready' | 'play' | 'summary' | 'victory' | 'deck'
+      // PWA Install state
+      deferredInstallPrompt: null,
+      isStandalone: window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true,
+      isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream,
+
+      // Setup Settings
+      mode: 'teams', // 'teams' | 'solo'
+      teamNames: ['TEAM YELLOW', 'TEAM BLACK'],
+      selectedLevels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
+      roundDuration: 60, // 30 | 60 | 90
+      targetScore: 25, // 15 | 25 | 40 | 0 (0 = Free Play)
+
+      // Custom Vocabulary
+      customCards: SafeStorage.get('taboo_custom_cards_v1', []),
+
+      // Deck Manager UI State
+      deckSubTab: 'browse', // 'browse' | 'add'
+      deckSearch: '',
+      deckFilter: 'ALL', // 'ALL' | 'CUSTOM' | 'A1'..'C2'
+      confirmDeleteId: null,
+
+      // Active Match State
+      scores: [0, 0],
+      activeTeamIndex: 0,
+      roundNumber: 1,
+      turnsPlayedInRound: 0, // 0 or 1 in 2-team mode so both teams play equal turns
+      drawQueue: [],
+      drawQueueSignature: '',
+
+      // Active Round State
+      timeLeft: 60,
+      timerInterval: null,
+      isPaused: false,
+      currentCard: null,
+      roundHistory: [], // Array of { card, status: 'correct' | 'taboo' | 'skip' }
+      cardFlash: ''
+    };
+
+    function getAllCards() {
+      return [...state.customCards, ...BUILTIN_CARDS];
+    }
+
+    function getPlayablePool() {
+      return getAllCards().filter(card => state.selectedLevels.includes(card.level));
+    }
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function getPoolSignature() {
+      return `${state.selectedLevels.slice().sort().join(',')}::${state.customCards.map(c => c.id).join(',')}`;
+    }
+
+    function drawNextCard() {
+      const pool = getPlayablePool();
+      if (pool.length === 0) return null;
+
+      const sig = getPoolSignature();
+      if (state.drawQueueSignature !== sig || state.drawQueue.length === 0) {
+        const wasExhausted = state.drawQueueSignature === sig && state.drawQueue.length === 0 && state.screen === 'play';
+        state.drawQueue = shuffleArray(pool);
+        state.drawQueueSignature = sig;
+        if (wasExhausted) {
+          showToast('All cards played — deck reshuffled!');
+        }
+      }
+
+      return state.drawQueue.pop();
+    }
+
+    /**
+     * ============================================================================
+     * 5. UI HELPERS: TOASTS, MODALS & ICONS
+     * ============================================================================
+     */
+    function showToast(message, type = 'default') {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      const colorClasses =
+        type === 'success'
+          ? 'bg-elevated border-correct/60 text-offwhite'
+          : type === 'error'
+          ? 'bg-elevated border-taboo/60 text-offwhite'
+          : 'bg-elevated border-electric/50 text-offwhite';
+
+      el.className = `px-4 py-2.5 rounded-full border ${colorClasses} shadow-xl text-xs font-semibold tracking-wide flex items-center gap-2 transition-all duration-300 opacity-0 translate-y-2`;
+      el.innerHTML = `<span class="w-2 h-2 rounded-full ${
+        type === 'success' ? 'bg-correct' : type === 'error' ? 'bg-taboo' : 'bg-electric'
+      }"></span><span>${escapeHTML(message)}</span>`;
+
+      container.appendChild(el);
+      requestAnimationFrame(() => {
+        el.classList.remove('opacity-0', 'translate-y-2');
+      });
+
+      setTimeout(() => {
+        el.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => el.remove(), 300);
+      }, 2400);
+    }
+
+    function escapeHTML(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function openModal(html) {
+      const backdrop = document.getElementById('modal-backdrop');
+      const content = document.getElementById('modal-content');
+      content.innerHTML = html;
+      backdrop.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      const backdrop = document.getElementById('modal-backdrop');
+      backdrop.classList.add('hidden');
+    }
+
+    document.getElementById('modal-backdrop').addEventListener('click', (e) => {
+      if (e.target.id === 'modal-backdrop') {
+        if (state.screen === 'play' && state.isPaused) {
+          resumeRound();
+        } else {
+          closeModal();
+        }
+      }
+    });
+
+    /**
+     * ============================================================================
+     * 6. PWA INSTALLATION PROMPT & 2-STEP VISUAL GUIDE MODAL (iOS & ANDROID)
+     * ============================================================================
+     */
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      state.deferredInstallPrompt = e;
+      updateHeaderInstallButton();
+    });
+
+    window.addEventListener('appinstalled', () => {
+      state.deferredInstallPrompt = null;
+      state.isStandalone = true;
+      updateHeaderInstallButton();
+      closeModal();
+      showToast('TABOO installed to your home screen!', 'success');
+    });
+
+    function updateHeaderInstallButton() {
+      const btn = document.getElementById('btn-install-header');
+      const label = document.getElementById('install-btn-label');
+      if (state.isStandalone) {
+        btn.className = 'btn-press h-9 px-3 rounded-xl bg-surface border border-borderdark text-electric font-bold text-xs tracking-wide flex items-center gap-1.5';
+        label.textContent = 'App Ready';
+      } else {
+        btn.className = 'btn-press h-9 px-3 rounded-xl bg-electric text-obsidian font-bold text-xs tracking-wide flex items-center gap-1.5 shadow-[0_0_14px_rgba(250,204,21,0.25)]';
+        label.textContent = 'Install';
+      }
+    }
+
+    async function handleInstallClick() {
+      SoundEngine.playTap();
+      // If Android Chrome native prompt is available, trigger it immediately
+      if (state.deferredInstallPrompt) {
+        try {
+          state.deferredInstallPrompt.prompt();
+          const choice = await state.deferredInstallPrompt.userChoice;
+          if (choice.outcome === 'accepted') {
+            state.deferredInstallPrompt = null;
+            updateHeaderInstallButton();
+          }
+          return;
+        } catch (err) {
+          // Fallback to visual instructions modal
+        }
+      }
+      openInstallGuideModal(state.isIOS ? 'ios' : 'android');
+    }
+
+    function openInstallGuideModal(activeTab = 'ios') {
+      const isIOS = activeTab === 'ios';
+      openModal(`
+        <div class="space-y-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-electric text-obsidian flex items-center justify-center font-display font-black text-2xl shadow-[0_0_20px_rgba(250,204,21,0.3)]">T</div>
+              <div>
+                <h3 class="font-display font-bold text-lg text-offwhite leading-tight">Add TABOO to Home Screen</h3>
+                <p class="text-xs text-muted mt-0.5">Full-screen offline-ready app experience</p>
+              </div>
+            </div>
+            <button type="button" onclick="closeModal()" class="w-8 h-8 rounded-full bg-elevated border border-borderdark flex items-center justify-center text-muted hover:text-offwhite">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <!-- Platform Switcher -->
+          <div class="grid grid-cols-2 p-1 rounded-xl bg-obsidian border border-borderdark">
+            <button type="button" onclick="openInstallGuideModal('ios')"
+              class="py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${isIOS ? 'bg-electric text-obsidian' : 'text-muted hover:text-offwhite'}">
+              iPhone / iPad (iOS)
+            </button>
+            <button type="button" onclick="openInstallGuideModal('android')"
+              class="py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${!isIOS ? 'bg-electric text-obsidian' : 'text-muted hover:text-offwhite'}">
+              Android (Chrome)
+            </button>
+          </div>
+
+          ${
+            isIOS
+              ? `
+              <div class="space-y-2.5">
+                <div class="p-3.5 rounded-2xl bg-elevated border border-borderdark flex items-center gap-3.5">
+                  <div class="w-9 h-9 rounded-xl bg-obsidian border border-electric/40 text-electric font-display font-bold flex items-center justify-center shrink-0">1</div>
+                  <div class="flex-1 text-xs text-offwhite leading-relaxed">
+                    Tap the <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-obsidian border border-borderdark font-bold text-electric">
+                      Share
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0l-4 4m4-4l4 4"/><path d="M4 13v6a2 2 0 002 2h12a2 2 0 002-2v-6"/></svg>
+                    </span> button in Safari's bottom toolbar.
+                  </div>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-elevated border border-borderdark flex items-center gap-3.5">
+                  <div class="w-9 h-9 rounded-xl bg-obsidian border border-electric/40 text-electric font-display font-bold flex items-center justify-center shrink-0">2</div>
+                  <div class="flex-1 text-xs text-offwhite leading-relaxed">
+                    Scroll down and tap <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-obsidian border border-borderdark font-bold text-electric">
+                      Add to Home Screen
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>
+                    </span>, then tap <strong>Add</strong>.
+                  </div>
+                </div>
+              </div>
+              `
+              : `
+              <div class="space-y-2.5">
+                <div class="p-3.5 rounded-2xl bg-elevated border border-borderdark flex items-center gap-3.5">
+                  <div class="w-9 h-9 rounded-xl bg-obsidian border border-electric/40 text-electric font-display font-bold flex items-center justify-center shrink-0">1</div>
+                  <div class="flex-1 text-xs text-offwhite leading-relaxed">
+                    Tap the <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-obsidian border border-borderdark font-bold text-electric">
+                      Menu ⋮
+                    </span> icon in the top-right corner of Chrome.
+                  </div>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-elevated border border-borderdark flex items-center gap-3.5">
+                  <div class="w-9 h-9 rounded-xl bg-obsidian border border-electric/40 text-electric font-display font-bold flex items-center justify-center shrink-0">2</div>
+                  <div class="flex-1 text-xs text-offwhite leading-relaxed">
+                    Tap <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-obsidian border border-borderdark font-bold text-electric">
+                      Install app
+                    </span> or <strong>Add to Home screen</strong> to launch TABOO full-screen.
+                  </div>
+                </div>
+              </div>
+              `
+          }
+
+          <button type="button" onclick="closeModal()" class="btn-press w-full py-3 rounded-2xl bg-electric text-obsidian font-bold text-sm tracking-wide">
+            Got It
+          </button>
+        </div>
+      `);
+    }
+
+    /**
+     * ============================================================================
+     * 7. HEADER & NAVIGATION RENDERING
+     * ============================================================================
+     */
+    function updateHeaderAndNav() {
+      // Mute icon
+      const muteBtn = document.getElementById('btn-mute');
+      muteBtn.innerHTML = SoundEngine.muted
+        ? `<svg class="w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`
+        : `<svg class="w-4 h-4 text-electric" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>`;
+
+      // Show main nav only on 'setup' and 'deck' screens
+      const nav = document.getElementById('main-nav');
+      const showNav = state.screen === 'setup' || state.screen === 'deck';
+      nav.classList.toggle('hidden', !showNav);
+
+      if (showNav) {
+        const navPlay = document.getElementById('nav-play');
+        const navDeck = document.getElementById('nav-deck');
+        const badge = document.getElementById('nav-custom-badge');
+
+        if (state.customCards.length > 0) {
+          badge.classList.remove('hidden');
+          badge.textContent = `+${state.customCards.length}`;
+        } else {
+          badge.classList.add('hidden');
+        }
+
+        if (state.screen === 'setup') {
+          navPlay.className = 'btn-press py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 bg-electric text-obsidian shadow-sm';
+          navDeck.className = 'btn-press py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 text-muted hover:text-offwhite';
+        } else {
+          navPlay.className = 'btn-press py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 text-muted hover:text-offwhite';
+          navDeck.className = 'btn-press py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 bg-electric text-obsidian shadow-sm';
+        }
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 8. SCREEN 1: GAME SETUP SCREEN
+     * ============================================================================
+     */
+    function renderSetupScreen() {
+      const allCards = getAllCards();
+      const playableCount = getPlayablePool().length;
+      const isTeams = state.mode === 'teams';
+
+      const levelCounts = {};
+      CEFR_LEVELS.forEach(lvl => {
+        levelCounts[lvl] = allCards.filter(c => c.level === lvl).length;
+      });
+
+      const container = document.getElementById('view-container');
+      container.innerHTML = `
+        <div class="flex-1 min-h-0 flex flex-col">
+          <div class="flex-1 custom-scroll px-4 pt-2.5 pb-4 space-y-3.5">
+
+            <!-- 1. Game Mode & Teams -->
+            <section class="bg-surface border border-borderdark rounded-2xl p-3.5 space-y-3">
+              <div class="flex items-center justify-between">
+                <h2 class="text-xs font-extrabold uppercase tracking-wider text-offwhite">Game Mode</h2>
+                <span class="text-[11px] font-semibold text-muted">${isTeams ? 'Pass & Play' : 'Timed Drill'}</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" onclick="setGameMode('teams')"
+                  class="btn-press py-2.5 px-3 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all ${
+                    isTeams
+                      ? 'bg-electric text-obsidian border-electric shadow-[0_0_16px_rgba(250,204,21,0.2)]'
+                      : 'bg-obsidian text-muted border-borderdark hover:text-offwhite'
+                  }">
+                  2 Teams
+                </button>
+                <button type="button" onclick="setGameMode('solo')"
+                  class="btn-press py-2.5 px-3 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all ${
+                    !isTeams
+                      ? 'bg-electric text-obsidian border-electric shadow-[0_0_16px_rgba(250,204,21,0.2)]'
+                      : 'bg-obsidian text-muted border-borderdark hover:text-offwhite'
+                  }">
+                  Solo Practice
+                </button>
+              </div>
+
+              ${
+                isTeams
+                  ? `
+                  <div class="grid grid-cols-2 gap-2 pt-0.5">
+                    <div>
+                      <label class="block text-[10px] font-bold uppercase tracking-wider text-electric mb-1">Team 1</label>
+                      <input type="text" maxlength="18" value="${escapeHTML(state.teamNames[0])}"
+                        oninput="updateTeamName(0, this.value)"
+                        placeholder="TEAM YELLOW"
+                        class="w-full px-3 py-2 rounded-xl bg-obsidian border border-borderdark focus:border-electric focus:outline-none text-xs font-bold text-offwhite uppercase" />
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold uppercase tracking-wider text-muted mb-1">Team 2</label>
+                      <input type="text" maxlength="18" value="${escapeHTML(state.teamNames[1])}"
+                        oninput="updateTeamName(1, this.value)"
+                        placeholder="TEAM BLACK"
+                        class="w-full px-3 py-2 rounded-xl bg-obsidian border border-borderdark focus:border-electric focus:outline-none text-xs font-bold text-offwhite uppercase" />
+                    </div>
+                  </div>
+                  `
+                  : ''
+              }
+            </section>
+
+            <!-- 2. CEFR Vocabulary Levels (A1 - C2) -->
+            <section class="bg-surface border border-borderdark rounded-2xl p-3.5 space-y-3">
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <h2 class="text-xs font-extrabold uppercase tracking-wider text-offwhite">Vocabulary Level</h2>
+                  <p class="text-[11px] text-muted mt-0.5">${playableCount} cards selected</p>
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="flex items-center gap-1">
+                  ${['ALL', 'A1-A2', 'B1-B2', 'C1-C2']
+                    .map(
+                      preset => `
+                      <button type="button" onclick="applyLevelPreset('${preset}')"
+                        class="btn-press px-2 py-1 rounded-lg bg-obsidian border border-borderdark hover:border-electric/60 text-[10px] font-bold text-electric">
+                        ${preset}
+                      </button>
+                    `
+                    )
+                    .join('')}
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2">
+                ${CEFR_LEVELS.map(lvl => {
+                  const active = state.selectedLevels.includes(lvl);
+                  return `
+                    <button type="button" onclick="toggleLevel('${lvl}')"
+                      class="btn-press p-2.5 rounded-xl border text-left transition-all ${
+                        active
+                          ? 'bg-elevated border-electric shadow-[0_0_14px_rgba(250,204,21,0.12)]'
+                          : 'bg-obsidian border-borderdark opacity-65 hover:opacity-100'
+                      }">
+                      <div class="flex items-center justify-between">
+                        <span class="font-display font-black text-base ${active ? 'text-electric' : 'text-offwhite'}">${lvl}</span>
+                        <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-surface border border-borderdark text-muted">${levelCounts[lvl]}</span>
+                      </div>
+                      <div class="text-[10px] font-semibold text-muted truncate mt-0.5">${CEFR_DESCRIPTIONS[lvl]}</div>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </section>
+
+            <!-- 3. Round Timer & Target Score -->
+            <section class="bg-surface border border-borderdark rounded-2xl p-3.5 space-y-3">
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <h2 class="text-xs font-extrabold uppercase tracking-wider text-offwhite">Round Timer</h2>
+                  <span class="text-[11px] font-bold text-electric">${state.roundDuration} Seconds</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  ${[30, 60, 90]
+                    .map(
+                      sec => `
+                      <button type="button" onclick="setRoundDuration(${sec})"
+                        class="btn-press py-2 rounded-xl border text-xs font-display font-bold transition-all ${
+                          state.roundDuration === sec
+                            ? 'bg-electric text-obsidian border-electric'
+                            : 'bg-obsidian text-muted border-borderdark hover:text-offwhite'
+                        }">
+                        ${sec}s
+                      </button>
+                    `
+                    )
+                    .join('')}
+                </div>
+              </div>
+
+              ${
+                isTeams
+                  ? `
+                  <div class="pt-2 border-t border-borderdark">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <h2 class="text-xs font-extrabold uppercase tracking-wider text-offwhite">Winning Goal</h2>
+                      <span class="text-[11px] font-bold text-electric">${state.targetScore === 0 ? 'Endless' : `${state.targetScore} Points`}</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1.5">
+                      ${[15, 25, 40, 0]
+                        .map(
+                          pts => `
+                          <button type="button" onclick="setTargetScore(${pts})"
+                            class="btn-press py-2 rounded-xl border text-xs font-display font-bold transition-all ${
+                              state.targetScore === pts
+                                ? 'bg-electric text-obsidian border-electric'
+                                : 'bg-obsidian text-muted border-borderdark hover:text-offwhite'
+                            }">
+                            ${pts === 0 ? '∞' : `${pts}`}
+                          </button>
+                        `
+                        )
+                        .join('')}
+                    </div>
+                  </div>
+                  `
+                  : ''
+              }
+            </section>
+          </div>
+
+          <!-- Sticky Bottom Start CTA & Creator Credit -->
+          <div class="px-4 pt-2.5 safe-bottom bg-obsidian border-t border-borderdark shrink-0 space-y-2.5">
+            <button type="button" onclick="startNewMatch()" ${playableCount === 0 ? 'disabled' : ''}
+              class="btn-press w-full py-3.5 rounded-2xl font-display font-black text-base uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                playableCount > 0
+                  ? 'bg-electric text-obsidian shadow-[0_0_24px_rgba(250,204,21,0.3)] hover:bg-electricHover'
+                  : 'bg-elevated text-muted border border-borderdark cursor-not-allowed'
+              }">
+              <span>Start Game</span>
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+
+            <!-- Creator Credit Footer -->
+            <div class="flex items-center justify-center gap-2 text-[11px] text-muted">
+              <span>Made by <strong class="font-display font-bold text-electric tracking-wide">JiGARO</strong></span>
+              <span class="text-borderdark">•</span>
+              <a href="https://instagram.com/georgejigaro" target="_blank" rel="noopener noreferrer"
+                class="btn-press inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface border border-borderdark hover:border-electric/60 text-electric font-semibold transition-colors">
+                <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+                <span>@georgejigaro</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function setGameMode(mode) {
+      SoundEngine.playTap();
+      state.mode = mode;
+      render();
+    }
+
+    function updateTeamName(idx, val) {
+      state.teamNames[idx] = val;
+    }
+
+    function toggleLevel(lvl) {
+      SoundEngine.playTap();
+      const exists = state.selectedLevels.includes(lvl);
+      if (exists) {
+        if (state.selectedLevels.length === 1) {
+          showToast('Keep at least 1 CEFR level selected');
+          return;
+        }
+        state.selectedLevels = state.selectedLevels.filter(l => l !== lvl);
+      } else {
+        state.selectedLevels = [...state.selectedLevels, lvl];
+      }
+      render();
+    }
+
+    function applyLevelPreset(preset) {
+      SoundEngine.playTap();
+      if (preset === 'ALL') state.selectedLevels = [...CEFR_LEVELS];
+      if (preset === 'A1-A2') state.selectedLevels = ['A1', 'A2'];
+      if (preset === 'B1-B2') state.selectedLevels = ['B1', 'B2'];
+      if (preset === 'C1-C2') state.selectedLevels = ['C1', 'C2'];
+      render();
+    }
+
+    function setRoundDuration(sec) {
+      SoundEngine.playTap();
+      state.roundDuration = sec;
+      render();
+    }
+
+    function setTargetScore(score) {
+      SoundEngine.playTap();
+      state.targetScore = score;
+      render();
+    }
+
+    /**
+     * ============================================================================
+     * 9. MATCH & ROUND LIFECYCLE (READY -> PLAY -> SUMMARY -> VICTORY)
+     * ============================================================================
+     */
+    function startNewMatch() {
+      if (getPlayablePool().length === 0) return;
+      SoundEngine.init();
+      SoundEngine.playCorrect();
+
+      state.teamNames[0] = (state.teamNames[0] || '').trim() || 'TEAM YELLOW';
+      state.teamNames[1] = (state.teamNames[1] || '').trim() || 'TEAM BLACK';
+      state.scores = [0, 0];
+      state.activeTeamIndex = 0;
+      state.roundNumber = 1;
+      state.turnsPlayedInRound = 0;
+      state.screen = 'ready';
+      render();
+    }
+
+    function renderReadyScreen() {
+      const isTeams = state.mode === 'teams';
+      const activeTeamName = isTeams ? state.teamNames[state.activeTeamIndex] : 'SOLO PRACTICE';
+      const isTieBreakerOrFinalTurn =
+        isTeams &&
+        state.targetScore > 0 &&
+        state.turnsPlayedInRound === 1 &&
+        state.scores[0] >= state.targetScore;
+
+      const container = document.getElementById('view-container');
+      container.innerHTML = `
+        <div class="flex-1 min-h-0 flex flex-col justify-between p-4">
+          <!-- Top Scoreboard -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <button type="button" onclick="confirmQuitMatch()" class="btn-press px-3 py-1.5 rounded-xl bg-surface border border-borderdark text-xs font-semibold text-muted hover:text-offwhite">
+                ← Setup
+              </button>
+              <span class="px-3 py-1 rounded-full bg-surface border border-borderdark text-xs font-bold text-electric tracking-wider">
+                ROUND ${state.roundNumber} ${state.targetScore > 0 && isTeams ? `• GOAL ${state.targetScore}` : ''}
+              </span>
+            </div>
+
+            ${
+              isTeams
+                ? `
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div class="p-3.5 rounded-2xl border transition-all ${
+                    state.activeTeamIndex === 0
+                      ? 'bg-elevated border-electric shadow-[0_0_20px_rgba(250,204,21,0.12)]'
+                      : 'bg-surface border-borderdark opacity-70'
+                  }">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[11px] font-bold uppercase tracking-wider ${state.activeTeamIndex === 0 ? 'text-electric' : 'text-muted'} truncate">${escapeHTML(state.teamNames[0])}</span>
+                      ${state.activeTeamIndex === 0 ? '<span class="w-2 h-2 rounded-full bg-electric"></span>' : ''}
+                    </div>
+                    <div class="font-display font-black text-3xl text-offwhite mt-1">${state.scores[0]}</div>
+                  </div>
+
+                  <div class="p-3.5 rounded-2xl border transition-all ${
+                    state.activeTeamIndex === 1
+                      ? 'bg-elevated border-electric shadow-[0_0_20px_rgba(250,204,21,0.12)]'
+                      : 'bg-surface border-borderdark opacity-70'
+                  }">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[11px] font-bold uppercase tracking-wider ${state.activeTeamIndex === 1 ? 'text-electric' : 'text-muted'} truncate">${escapeHTML(state.teamNames[1])}</span>
+                      ${state.activeTeamIndex === 1 ? '<span class="w-2 h-2 rounded-full bg-electric"></span>' : ''}
+                    </div>
+                    <div class="font-display font-black text-3xl text-offwhite mt-1">${state.scores[1]}</div>
+                  </div>
+                </div>
+                `
+                : `
+                <div class="p-4 rounded-2xl bg-surface border border-borderdark flex items-center justify-between">
+                  <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-muted">Total Practice Score</div>
+                    <div class="text-xs text-muted mt-0.5">${state.selectedLevels.join(' · ')} (${state.roundDuration}s)</div>
+                  </div>
+                  <div class="font-display font-black text-4xl text-electric">${state.scores[0]}</div>
+                </div>
+                `
+            }
+          </div>
+
+          <!-- Center Pass-the-Phone Interstitial Card -->
+          <div class="my-auto py-4">
+            <div class="bg-surface border-2 border-electric/80 rounded-3xl p-6 text-center space-y-4 shadow-[0_0_40px_rgba(250,204,21,0.1)]">
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-electric/15 border border-electric/30 text-electric text-[11px] font-extrabold uppercase tracking-widest">
+                ${isTeams ? 'Pass The Phone' : 'Get Ready'}
+              </div>
+
+              <div>
+                <p class="text-xs uppercase tracking-widest text-muted font-semibold">Up Next</p>
+                <h2 class="font-display font-black text-3xl sm:text-4xl text-offwhite tracking-tight mt-1 break-words">
+                  ${escapeHTML(activeTeamName)}
+                </h2>
+              </div>
+
+              ${
+                isTieBreakerOrFinalTurn
+                  ? `<div class="px-3 py-1.5 rounded-xl bg-taboo/15 border border-taboo/40 text-taboo text-xs font-bold">
+                      Final Answering Turn! Beat ${state.scores[0]} pts to win!
+                    </div>`
+                  : ''
+              }
+
+              <div class="pt-2 border-t border-borderdark text-xs text-muted leading-relaxed space-y-1">
+                <p>Describe the <span class="text-electric font-bold">TARGET WORD</span> to your teammates.</p>
+                <p>Do <span class="text-taboo font-bold">NOT</span> say any of the 5 forbidden words!</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Start Round Button -->
+          <div class="safe-bottom">
+            <button type="button" onclick="beginActiveRound()"
+              class="btn-press w-full py-4 rounded-2xl bg-electric hover:bg-electricHover text-obsidian font-display font-black text-lg uppercase tracking-wider shadow-[0_0_28px_rgba(250,204,21,0.35)] flex items-center justify-center gap-2.5">
+              <span>Start ${state.roundDuration}s Round</span>
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function beginActiveRound() {
+      SoundEngine.init();
+      SoundEngine.playCorrect();
+
+      state.timeLeft = state.roundDuration;
+      state.isPaused = false;
+      state.roundHistory = [];
+      state.cardFlash = '';
+      state.currentCard = drawNextCard();
+      state.screen = 'play';
+      render();
+      startRoundTimer();
+    }
+
+    function startRoundTimer() {
+      clearInterval(state.timerInterval);
+      state.timerInterval = setInterval(() => {
+        if (state.isPaused || state.screen !== 'play') return;
+
+        state.timeLeft -= 1;
+
+        if (state.timeLeft <= 5 && state.timeLeft > 0) {
+          SoundEngine.playTick(state.timeLeft <= 3);
+        }
+
+        if (state.timeLeft <= 0) {
+          state.timeLeft = 0;
+          updateTimerDOM();
+          clearInterval(state.timerInterval);
+          SoundEngine.playEndHorn();
+          finishActiveRound();
+          return;
+        }
+
+        updateTimerDOM();
+      }, 1000);
+    }
+
+    function updateTimerDOM() {
+      const timeText = document.getElementById('hud-time-text');
+      const bar = document.getElementById('hud-timer-bar');
+      if (timeText) {
+        const mins = Math.floor(state.timeLeft / 60);
+        const secs = String(state.timeLeft % 60).padStart(2, '0');
+        timeText.textContent = `${mins}:${secs}`;
+        if (state.timeLeft <= 10) {
+          timeText.classList.add('text-taboo');
+          timeText.classList.remove('text-electric');
+        } else {
+          timeText.classList.remove('text-taboo');
+          timeText.classList.add('text-electric');
+        }
+      }
+      if (bar) {
+        const pct = Math.max(0, (state.timeLeft / state.roundDuration) * 100);
+        bar.style.width = `${pct}%`;
+        if (state.timeLeft <= 10) {
+          bar.classList.add('timer-danger');
+        } else {
+          bar.classList.remove('timer-danger');
+        }
+      }
+    }
+
+    function getCurrentRoundNetScore() {
+      return state.roundHistory.reduce((sum, item) => {
+        if (item.status === 'correct') return sum + 1;
+        if (item.status === 'taboo') return sum - 1;
+        return sum;
+      }, 0);
+    }
+
+    function recordCardAction(status) {
+      if (state.screen !== 'play' || state.isPaused || !state.currentCard) return;
+
+      if (status === 'correct') {
+        SoundEngine.playCorrect();
+        state.cardFlash = 'flash-correct';
+      } else if (status === 'taboo') {
+        SoundEngine.playTaboo();
+        state.cardFlash = 'flash-taboo';
+      } else {
+        SoundEngine.playSkip();
+        state.cardFlash = '';
+      }
+
+      state.roundHistory.push({
+        card: state.currentCard,
+        status
+      });
+
+      state.currentCard = drawNextCard();
+      renderPlayScreen();
+    }
+
+    function renderPlayScreen() {
+      const card = state.currentCard;
+      if (!card) {
+        finishActiveRound();
+        return;
+      }
+
+      const isTeams = state.mode === 'teams';
+      const activeTeamName = isTeams ? state.teamNames[state.activeTeamIndex] : 'SOLO';
+      const roundNet = getCurrentRoundNetScore();
+      const totalDisplayedScore = state.scores[state.activeTeamIndex] + roundNet;
+
+      const mins = Math.floor(state.timeLeft / 60);
+      const secs = String(state.timeLeft % 60).padStart(2, '0');
+      const pct = Math.max(0, (state.timeLeft / state.roundDuration) * 100);
+      const isDanger = state.timeLeft <= 10;
+
+      // Dynamic font sizing for long target words (e.g., C2 words)
+      const wordLen = card.word.length;
+      const targetFontClass =
+        wordLen >= 14
+          ? 'text-2xl sm:text-3xl'
+          : wordLen >= 11
+          ? 'text-3xl sm:text-4xl'
+          : 'text-4xl sm:text-[42px]';
+
+      const container = document.getElementById('view-container');
+      container.innerHTML = `
+        <div class="flex-1 min-h-0 flex flex-col justify-between px-4 pt-2.5 pb-2">
+          <!-- Top Gameplay HUD -->
+          <div class="space-y-2 shrink-0">
+            <div class="flex items-center justify-between gap-2">
+              <!-- Team & Score Pill -->
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="px-2.5 py-1 rounded-xl bg-surface border border-borderdark text-xs font-extrabold text-offwhite truncate max-w-[140px]">
+                  ${escapeHTML(activeTeamName)}
+                </span>
+                <span class="px-2.5 py-1 rounded-xl bg-elevated border border-borderdark text-xs font-black text-electric">
+                  ${totalDisplayedScore} <span class="text-[10px] font-semibold text-muted">(${roundNet >= 0 ? `+${roundNet}` : roundNet})</span>
+                </span>
+              </div>
+
+              <!-- Timer + Pause Button -->
+              <div class="flex items-center gap-2 shrink-0">
+                <div id="hud-time-text" class="font-display font-black text-2xl tabular-nums ${isDanger ? 'text-taboo' : 'text-electric'}">
+                  ${mins}:${secs}
+                </div>
+                <button type="button" onclick="pauseRound()" aria-label="Pause Round"
+                  class="btn-press w-9 h-9 rounded-xl bg-surface border border-borderdark flex items-center justify-center text-muted hover:text-offwhite">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="5" width="4" height="14" rx="1"/>
+                    <rect x="14" y="5" width="4" height="14" rx="1"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Shrinking Timer Progress Bar -->
+            <div class="w-full h-2 rounded-full bg-surface border border-borderdark overflow-hidden">
+              <div id="hud-timer-bar"
+                class="h-full rounded-full bg-electric transition-all duration-300 ease-linear ${isDanger ? 'timer-danger' : ''}"
+                style="width: ${pct}%"></div>
+            </div>
+          </div>
+
+          <!-- Hero Taboo Card -->
+          <div class="flex-1 min-h-0 py-2.5 flex flex-col justify-center">
+            <div id="active-taboo-card"
+              class="animate-card-enter ${state.cardFlash} w-full h-full max-h-[460px] bg-surface border-2 border-electric rounded-3xl flex flex-col overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.65)]">
+
+              <!-- Card Top Header: Target Word Zone -->
+              <div class="bg-elevated px-4 pt-3 pb-3.5 border-b border-borderdark text-center shrink-0 relative">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="px-2 py-0.5 rounded-md bg-electric text-obsidian font-display font-black text-[11px] tracking-wider">
+                    ${card.level}
+                  </span>
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-muted">
+                    ${card.isCustom ? '★ Custom Card' : CEFR_DESCRIPTIONS[card.level]}
+                  </span>
+                  <span class="text-[11px] font-bold text-muted">
+                    #${state.roundHistory.length + 1}
+                  </span>
+                </div>
+
+                <h1 class="font-display font-black ${targetFontClass} text-offwhite tracking-tight uppercase leading-tight break-words py-0.5">
+                  ${escapeHTML(card.word)}
+                </h1>
+              </div>
+
+              <!-- Forbidden Words Zone -->
+              <div class="flex-1 min-h-0 px-4 py-2.5 flex flex-col justify-center">
+                <div class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-taboo text-center mb-1.5 shrink-0">
+                  Forbidden Words
+                </div>
+
+                <ul class="flex-1 min-h-0 flex flex-col justify-evenly gap-1">
+                  ${card.forbidden
+                    .map(
+                      (fWord) => `
+                      <li class="flex items-center justify-center gap-2 py-1 px-3 rounded-xl bg-obsidian/70 border border-borderdark/80">
+                        <svg class="w-3.5 h-3.5 text-taboo shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <circle cx="12" cy="12" r="9"/>
+                          <line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/>
+                        </svg>
+                        <span class="font-display font-bold text-base sm:text-lg text-offwhite tracking-wide uppercase truncate">
+                          ${escapeHTML(fWord)}
+                        </span>
+                      </li>
+                    `
+                    )
+                    .join('')}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thumb-Friendly Bottom Action Controls -->
+          <div class="grid grid-cols-3 gap-2.5 shrink-0 safe-bottom pt-1">
+            <!-- TABOO (-1) -->
+            <button type="button" onclick="recordCardAction('taboo')"
+              class="btn-press py-3.5 px-2 rounded-2xl bg-surface border-2 border-taboo/80 hover:bg-taboo/15 flex flex-col items-center justify-center gap-0.5 text-taboo">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+                <circle cx="12" cy="12" r="9"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+              <span class="font-display font-black text-xs uppercase tracking-wider">Taboo</span>
+              <span class="text-[10px] font-bold opacity-80">-1 PT</span>
+            </button>
+
+            <!-- SKIP (0) -->
+            <button type="button" onclick="recordCardAction('skip')"
+              class="btn-press py-3.5 px-2 rounded-2xl bg-elevated border border-borderdark hover:border-muted/60 flex flex-col items-center justify-center gap-0.5 text-offwhite">
+              <svg class="w-5 h-5 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 4 15 12 5 20 5 4"/>
+                <line x1="19" y1="5" x2="19" y2="19"/>
+              </svg>
+              <span class="font-display font-black text-xs uppercase tracking-wider">Skip</span>
+              <span class="text-[10px] font-bold text-muted">0 PTS</span>
+            </button>
+
+            <!-- GOT IT (+1) -->
+            <button type="button" onclick="recordCardAction('correct')"
+              class="btn-press py-3.5 px-2 rounded-2xl bg-correct text-obsidian border-2 border-correct shadow-[0_0_20px_rgba(34,197,94,0.28)] flex flex-col items-center justify-center gap-0.5">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span class="font-display font-black text-xs uppercase tracking-wider">Got It</span>
+              <span class="text-[10px] font-extrabold opacity-80">+1 PT</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function pauseRound() {
+      if (state.screen !== 'play') return;
+      SoundEngine.playTap();
+      state.isPaused = true;
+      openModal(`
+        <div class="space-y-4 text-center">
+          <div class="w-12 h-12 rounded-2xl bg-electric/15 border border-electric/40 text-electric mx-auto flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="5" width="4" height="14" rx="1"/>
+              <rect x="14" y="5" width="4" height="14" rx="1"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-display font-black text-xl text-offwhite">Round Paused</h3>
+            <p class="text-xs text-muted mt-1">${state.timeLeft} seconds remaining</p>
+          </div>
+          <div class="space-y-2.5 pt-1">
+            <button type="button" onclick="resumeRound()"
+              class="btn-press w-full py-3.5 rounded-2xl bg-electric text-obsidian font-display font-black text-sm uppercase tracking-wider">
+              Resume Round
+            </button>
+            <button type="button" onclick="closeModal(); finishActiveRound();"
+              class="btn-press w-full py-3 rounded-2xl bg-elevated border border-borderdark text-offwhite font-bold text-xs uppercase tracking-wider">
+              End Round Early
+            </button>
+            <button type="button" onclick="closeModal(); quitToSetup();"
+              class="btn-press w-full py-3 rounded-2xl bg-obsidian border border-taboo/40 text-taboo font-bold text-xs uppercase tracking-wider">
+              Quit Match
+            </button>
+          </div>
+        </div>
+      `);
+    }
+
+    function resumeRound() {
+      SoundEngine.playTap();
+      closeModal();
+      state.isPaused = false;
+    }
+
+    function confirmQuitMatch() {
+      SoundEngine.playTap();
+      openModal(`
+        <div class="space-y-4 text-center">
+          <h3 class="font-display font-black text-lg text-offwhite">Leave Current Match?</h3>
+          <p class="text-xs text-muted">Current scores will be reset and you will return to game setup.</p>
+          <div class="grid grid-cols-2 gap-2.5 pt-1">
+            <button type="button" onclick="closeModal()"
+              class="btn-press py-3 rounded-2xl bg-elevated border border-borderdark text-offwhite font-bold text-xs uppercase tracking-wider">
+              Cancel
+            </button>
+            <button type="button" onclick="closeModal(); quitToSetup();"
+              class="btn-press py-3 rounded-2xl bg-taboo text-offwhite font-bold text-xs uppercase tracking-wider">
+              Quit Match
+            </button>
+          </div>
+        </div>
+      `);
+    }
+
+    function quitToSetup() {
+      clearInterval(state.timerInterval);
+      state.isPaused = false;
+      state.screen = 'setup';
+      render();
+    }
+
+    function finishActiveRound() {
+      clearInterval(state.timerInterval);
+      state.isPaused = false;
+      state.screen = 'summary';
+      render();
+    }
+
+    /**
+     * ============================================================================
+     * 10. ROUND SUMMARY (WITH INTERACTIVE STATUS TOGGLES) & VICTORY SCREEN
+     * ============================================================================
+     */
+    function toggleHistoryItemStatus(index, newStatus) {
+      if (!state.roundHistory[index]) return;
+      SoundEngine.playTap();
+      state.roundHistory[index].status = newStatus;
+      renderSummaryScreen();
+    }
+
+    function renderSummaryScreen() {
+      const isTeams = state.mode === 'teams';
+      const activeTeamName = isTeams ? state.teamNames[state.activeTeamIndex] : 'SOLO PRACTICE';
+      const roundNet = getCurrentRoundNetScore();
+      const projectedTeamScore = state.scores[state.activeTeamIndex] + roundNet;
+
+      const container = document.getElementById('view-container');
+      container.innerHTML = `
+        <div class="flex-1 min-h-0 flex flex-col">
+          <!-- Summary Header -->
+          <div class="px-4 pt-3 pb-3 bg-surface border-b border-borderdark shrink-0">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-electric">Round ${state.roundNumber} Summary</span>
+                <h2 class="font-display font-black text-xl text-offwhite truncate">${escapeHTML(activeTeamName)}</h2>
+              </div>
+              <div class="text-right">
+                <div class="font-display font-black text-2xl ${roundNet > 0 ? 'text-correct' : roundNet < 0 ? 'text-taboo' : 'text-offwhite'}">
+                  ${roundNet >= 0 ? `+${roundNet}` : roundNet} PTS
+                </div>
+                <div class="text-[11px] font-semibold text-muted">
+                  New Total: <span class="text-offwhite font-bold">${projectedTeamScore}</span>
+                </div>
+              </div>
+            </div>
+            <p class="text-[11px] text-muted mt-1.5">Tap any card status below to adjust accidental taps before continuing.</p>
+          </div>
+
+          <!-- Played Cards Interactive Review List -->
+          <div class="flex-1 custom-scroll px-4 py-3 space-y-2">
+            ${
+              state.roundHistory.length === 0
+                ? `<div class="py-12 text-center text-muted text-xs">No cards were completed during this round.</div>`
+                : state.roundHistory
+                    .map(
+                      (entry, idx) => `
+                      <div class="p-3 rounded-2xl bg-surface border border-borderdark flex items-center justify-between gap-2">
+                        <div class="min-w-0">
+                          <div class="flex items-center gap-1.5">
+                            <span class="px-1.5 py-0.2 rounded bg-elevated border border-borderdark text-[10px] font-bold text-electric">${entry.card.level}</span>
+                            <span class="font-display font-bold text-sm text-offwhite truncate">${escapeHTML(entry.card.word)}</span>
+                          </div>
+                        </div>
+
+                        <div class="flex items-center gap-1 shrink-0">
+                          <button type="button" onclick="toggleHistoryItemStatus(${idx}, 'correct')"
+                            class="px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase border transition-all ${
+                              entry.status === 'correct'
+                                ? 'bg-correct text-obsidian border-correct'
+                                : 'bg-obsidian text-muted border-borderdark hover:text-offwhite'
+                            }">+1</button>
+                          <button type="button" onclick="toggleHistoryItemStatus(${idx}, 'skip')"
+                            class="px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase border transition-all ${
+                              entry.status === 'skip'
+                                ? 'bg-elevated text-offwhite border-offwhite/50'
+                                : 'bg-obsidian text-muted border-borderdark hover:text-offwhite'
+                            }">0</button>
+                          <button type="button" onclick="toggleHistoryItemStatus(${idx}, 'taboo')"
+                            class="px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase border transition-all ${
+                              entry.status === 'taboo'
+                                ? 'bg-taboo text-offwhite border-taboo'
+                                : 'bg-obsidian text-muted border-borderdark hover:text-offwhite'
+                            }">-1</button>
+                        </div>
+                      </div>
+                    `
+                    )
+                    .join('')
+            }
+          </div>
+
+          <!-- Continue CTA -->
+          <div class="px-4 pt-2 safe-bottom bg-obsidian border-t border-borderdark shrink-0">
+            <button type="button" onclick="commitRoundAndAdvance()"
+              class="btn-press w-full py-4 rounded-2xl bg-electric hover:bg-electricHover text-obsidian font-display font-black text-base uppercase tracking-wider shadow-[0_0_24px_rgba(250,204,21,0.3)]">
+              ${isTeams ? 'Confirm & Next Turn →' : 'Confirm & Next Round →'}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function commitRoundAndAdvance() {
+      SoundEngine.playCorrect();
+      const roundNet = getCurrentRoundNetScore();
+      state.scores[state.activeTeamIndex] += roundNet;
+
+      if (state.mode === 'solo') {
+        state.roundNumber += 1;
+        state.screen = 'ready';
+        render();
+        return;
+      }
+
+      // 2-Team Mode Turn & Victory Logic
+      state.turnsPlayedInRound += 1;
+
+      if (state.turnsPlayedInRound === 1) {
+        // Team 2 gets their equal answering turn
+        state.activeTeamIndex = 1;
+        state.screen = 'ready';
+        render();
+      } else {
+        // Both teams completed the round; check if target score was reached
+        const goal = state.targetScore;
+        const [s0, s1] = state.scores;
+        if (goal > 0 && (s0 >= goal || s1 >= goal) && s0 !== s1) {
+          state.screen = 'victory';
+          render();
+        } else {
+          state.roundNumber += 1;
+          state.turnsPlayedInRound = 0;
+          state.activeTeamIndex = 0;
+          state.screen = 'ready';
+          render();
+        }
+      }
+    }
+
+    function renderVictoryScreen() {
+      const [s0, s1] = state.scores;
+      const winnerIdx = s0 > s1 ? 0 : 1;
+      const winnerName = state.teamNames[winnerIdx];
+
+      const container = document.getElementById('view-container');
+      container.innerHTML = `
+        <div class="flex-1 min-h-0 flex flex-col justify-between p-5 text-center">
+          <div class="my-auto space-y-5">
+            <div class="w-20 h-20 rounded-3xl bg-electric text-obsidian mx-auto flex items-center justify-center shadow-[0_0_40px_rgba(250,204,21,0.4)]">
+              <svg class="w-11 h-11" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 003.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
+              </svg>
+            </div>
+
+            <div>
+              <span class="px-3 py-1 rounded-full bg-electric/15 border border-electric/30 text-electric text-xs font-extrabold uppercase tracking-widest">
+                Champions
+              </span>
+              <h1 class="font-display font-black text-4xl text-offwhite mt-2 break-words">
+                ${escapeHTML(winnerName)}
+              </h1>
+              <p class="text-xs text-muted mt-1">Completed in ${state.roundNumber} rounds</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 max-w-sm mx-auto">
+              <div class="p-4 rounded-2xl border ${winnerIdx === 0 ? 'bg-elevated border-electric' : 'bg-surface border-borderdark opacity-75'}">
+                <div class="text-xs font-bold uppercase text-muted truncate">${escapeHTML(state.teamNames[0])}</div>
+                <div class="font-display font-black text-4xl ${winnerIdx === 0 ? 'text-electric' : 'text-offwhite'} mt-1">${s0}</div>
+              </div>
+              <div class="p-4 rounded-2xl border ${winnerIdx === 1 ? 'bg-elevated border-electric' : 'bg-surface border-borderdark opacity-75'}">
+                <div class="text-xs font-bold uppercase text-muted truncate">${escapeHTML(state.teamNames[1])}</div>
+                <div class="font-display font-black text-4xl ${winnerIdx === 1 ? 'text-electric' : 'text-offwhite'} mt-1">${s1}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2.5 safe-bottom">
+            <button type="button" onclick="startNewMatch()"
+              class="btn-press w-full py-4 rounded-2xl bg-electric hover:bg-electricHover text-obsidian font-display font-black text-base uppercase tracking-wider shadow-[0_0_24px_rgba(250,204,21,0.3)]">
+              Play Rematch
+            </button>
+            <button type="button" onclick="quitToSetup()"
+              class="btn-press w-full py-3.5 rounded-2xl bg-surface border border-borderdark text-offwhite font-bold text-xs uppercase tracking-wider">
+              Back to Setup
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    /**
+     * ============================================================================
+     * 11. VOCABULARY & CUSTOM WORD MANAGER SCREEN
+     * ============================================================================
+     */
+    function renderDeckScreen() {
+      const allCards = getAllCards();
+      const query = state.deckSearch.trim().toLowerCase();
+
+      const filteredCards = allCards.filter(card => {
+        if (state.deckFilter === 'CUSTOM' && !card.isCustom) return false;
+        if (CEFR_LEVELS.includes(state.deckFilter) && card.level !== state.deckFilter) return false;
+        if (query) {
+          const inWord = card.word.toLowerCase().includes(query);
+          const inForbidden = card.forbidden.some(f => f.toLowerCase().includes(query));
+          return inWord || inForbidden;
+        }
+        return true;
+      });
+
+      const container = document.getElementById('view-container');
+      container.innerHTML = `
+        <div class="flex-1 min-h-0 flex flex-col">
+          <!-- Sub-Tab Bar: Browse Deck vs + Add New Word -->
+          <div class="px-4 pt-2 pb-2 shrink-0 flex items-center gap-2">
+            <button type="button" onclick="setDeckSubTab('browse')"
+              class="btn-press flex-1 py-2 px-3 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all ${
+                state.deckSubTab === 'browse'
+                  ? 'bg-elevated border-electric text-electric'
+                  : 'bg-surface border-borderdark text-muted hover:text-offwhite'
+              }">
+              Browse Deck (${allCards.length})
+            </button>
+            <button type="button" onclick="setDeckSubTab('add')"
+              class="btn-press flex-1 py-2 px-3 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
+                state.deckSubTab === 'add'
+                  ? 'bg-electric border-electric text-obsidian'
+                  : 'bg-surface border-borderdark text-electric hover:border-electric/60'
+              }">
+              <span>+ Add Word</span>
+            </button>
+          </div>
+
+          ${
+            state.deckSubTab === 'add'
+              ? renderAddWordFormHTML()
+              : renderBrowseDeckHTML(filteredCards)
+          }
+        </div>
+      `;
+    }
+
+    function setDeckSubTab(tab) {
+      SoundEngine.playTap();
+      state.deckSubTab = tab;
+      state.confirmDeleteId = null;
+      renderDeckScreen();
+    }
+
+    function renderAddWordFormHTML() {
+      return `
+        <form id="add-word-form" onsubmit="handleAddCustomWord(event)" class="flex-1 custom-scroll px-4 pt-1 pb-6 space-y-3.5">
+          <div class="bg-surface border border-borderdark rounded-2xl p-4 space-y-3.5">
+            <div>
+              <h3 class="font-display font-bold text-base text-offwhite">Create Custom Taboo Card</h3>
+              <p class="text-xs text-muted mt-0.5">Saved automatically to your device for offline play.</p>
+            </div>
+
+            <!-- Target Word -->
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-electric mb-1.5">
+                Target Word *
+              </label>
+              <input id="input-target-word" type="text" required maxlength="28" autocomplete="off"
+                placeholder="e.g., SERENDIPITY"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-obsidian border border-borderdark focus:border-electric focus:outline-none text-sm font-bold text-offwhite uppercase tracking-wide" />
+            </div>
+
+            <!-- CEFR Level Selector -->
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1.5">
+                CEFR Difficulty Level *
+              </label>
+              <div class="grid grid-cols-6 gap-1.5" id="add-level-group">
+                ${CEFR_LEVELS.map(
+                  (lvl, i) => `
+                  <label class="cursor-pointer">
+                    <input type="radio" name="new-card-level" value="${lvl}" ${i === 2 ? 'checked' : ''} class="peer sr-only" />
+                    <div class="py-2 rounded-xl text-center text-xs font-display font-black border border-borderdark bg-obsidian text-muted peer-checked:bg-electric peer-checked:text-obsidian peer-checked:border-electric transition-all">
+                      ${lvl}
+                    </div>
+                  </label>
+                `
+                ).join('')}
+              </div>
+            </div>
+
+            <!-- 5 Forbidden Words -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-[11px] font-bold uppercase tracking-wider text-taboo">
+                  Forbidden Words (Min 3, Max 5) *
+                </label>
+              </div>
+              ${[1, 2, 3, 4, 5]
+                .map(
+                  (num) => `
+                  <div class="flex items-center gap-2">
+                    <span class="w-5 text-center text-[11px] font-bold ${num <= 3 ? 'text-taboo' : 'text-muted'}">${num}</span>
+                    <input type="text" name="forbidden-${num}" maxlength="24" autocomplete="off"
+                      ${num <= 3 ? 'required' : ''}
+                      placeholder="${num <= 3 ? `Forbidden word #${num} (required)` : `Forbidden word #${num} (optional)`}"
+                      class="flex-1 px-3 py-2 rounded-xl bg-obsidian border border-borderdark focus:border-electric focus:outline-none text-xs font-semibold text-offwhite uppercase tracking-wide" />
+                  </div>
+                `
+                )
+                .join('')}
+            </div>
+
+            <div id="add-word-error" class="hidden p-2.5 rounded-xl bg-taboo/15 border border-taboo/40 text-taboo text-xs font-semibold"></div>
+
+            <button type="submit"
+              class="btn-press w-full py-3.5 rounded-2xl bg-electric hover:bg-electricHover text-obsidian font-display font-black text-sm uppercase tracking-wider shadow-[0_0_20px_rgba(250,204,21,0.25)]">
+              Save Card to Deck
+            </button>
+          </div>
+        </form>
+      `;
+    }
+
+    function handleAddCustomWord(e) {
+      e.preventDefault();
+      const form = e.target;
+      const errBox = document.getElementById('add-word-error');
+      errBox.classList.add('hidden');
+
+      const rawTarget = (form.querySelector('#input-target-word').value || '').trim().toUpperCase();
+      const level = form.querySelector('input[name="new-card-level"]:checked')?.value || 'B1';
+
+      const forbidden = [];
+      for (let i = 1; i <= 5; i++) {
+        const val = (form.querySelector(`input[name="forbidden-${i}"]`).value || '').trim().toUpperCase();
+        if (val && !forbidden.includes(val)) {
+          forbidden.push(val);
+        }
+      }
+
+      if (!rawTarget) {
+        errBox.textContent = 'Please enter a target word.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      if (forbidden.length < 3) {
+        errBox.textContent = 'Please enter at least 3 distinct forbidden words.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      const duplicate = getAllCards().some(c => c.word.toUpperCase() === rawTarget);
+      if (duplicate) {
+        errBox.textContent = `"${rawTarget}" already exists in the vocabulary deck.`;
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      const newCard = {
+        id: `custom-${Date.now()}`,
+        level,
+        word: rawTarget,
+        forbidden,
+        isCustom: true
+      };
+
+      state.customCards = [newCard, ...state.customCards];
+      SafeStorage.set('taboo_custom_cards_v1', state.customCards);
+      // Force draw queue refresh so new word enters play immediately
+      state.drawQueueSignature = '';
+
+      SoundEngine.playCorrect();
+      showToast(`Added "${rawTarget}" (${level})!`, 'success');
+      state.deckSubTab = 'browse';
+      state.deckFilter = 'CUSTOM';
+      render();
+    }
+
+    function renderBrowseDeckHTML(filteredCards) {
+      return `
+        <div class="flex-1 min-h-0 flex flex-col">
+          <!-- Search & Filter Controls -->
+          <div class="px-4 pb-2.5 space-y-2 shrink-0 border-b border-borderdark">
+            <div class="flex items-center gap-2">
+              <div class="relative flex-1">
+                <svg class="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" value="${escapeHTML(state.deckSearch)}"
+                  oninput="updateDeckSearch(this.value)"
+                  placeholder="Search target or forbidden words..."
+                  class="w-full pl-9 pr-3 py-2 rounded-xl bg-surface border border-borderdark focus:border-electric focus:outline-none text-xs text-offwhite" />
+              </div>
+
+              <!-- JSON Export / Import Trigger -->
+              <button type="button" onclick="openDeckJsonModal()" title="Export / Import Custom JSON"
+                class="btn-press px-2.5 py-2 rounded-xl bg-surface border border-borderdark hover:border-electric/60 text-xs font-bold text-electric shrink-0">
+                JSON ⇅
+              </button>
+            </div>
+
+            <!-- Horizontal Filter Chips -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+              ${['ALL', 'CUSTOM', ...CEFR_LEVELS]
+                .map(
+                  (f) => `
+                  <button type="button" onclick="setDeckFilter('${f}')"
+                    class="btn-press px-2.5 py-1 rounded-lg text-[11px] font-bold border shrink-0 transition-all ${
+                      state.deckFilter === f
+                        ? 'bg-electric text-obsidian border-electric'
+                        : 'bg-surface text-muted border-borderdark hover:text-offwhite'
+                    }">
+                    ${f === 'CUSTOM' ? `Custom (${state.customCards.length})` : f}
+                  </button>
+                `
+                )
+                .join('')}
+            </div>
+          </div>
+
+          <!-- Cards List -->
+          <div class="flex-1 custom-scroll px-4 py-3 space-y-2.5 safe-bottom">
+            ${
+              filteredCards.length === 0
+                ? `
+                <div class="py-12 text-center space-y-2">
+                  <p class="text-sm font-bold text-offwhite">No matching cards found</p>
+                  <p class="text-xs text-muted">Try clearing your search filter or add a new custom word.</p>
+                </div>
+                `
+                : filteredCards
+                    .map(
+                      (card) => `
+                      <div class="p-3.5 rounded-2xl bg-surface border border-borderdark space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                          <div class="flex items-center gap-2 min-w-0">
+                            <span class="px-2 py-0.5 rounded-md bg-electric text-obsidian font-display font-black text-[11px]">${card.level}</span>
+                            <h4 class="font-display font-black text-base text-offwhite uppercase truncate">${escapeHTML(card.word)}</h4>
+                            ${
+                              card.isCustom
+                                ? '<span class="px-1.5 py-0.5 rounded bg-elevated border border-electric/40 text-[9px] font-bold uppercase text-electric shrink-0">Custom</span>'
+                                : ''
+                            }
+                          </div>
+
+                          ${
+                            card.isCustom
+                              ? state.confirmDeleteId === card.id
+                                ? `<div class="flex items-center gap-1 shrink-0">
+                                    <button type="button" onclick="deleteCustomCard('${card.id}')" class="px-2 py-1 rounded-lg bg-taboo text-offwhite text-[10px] font-bold uppercase">Confirm</button>
+                                    <button type="button" onclick="cancelDeleteCustomCard()" class="px-2 py-1 rounded-lg bg-elevated text-muted text-[10px] font-bold uppercase">Cancel</button>
+                                   </div>`
+                                : `<button type="button" onclick="promptDeleteCustomCard('${card.id}')" aria-label="Delete custom word"
+                                    class="p-1.5 rounded-lg bg-obsidian border border-borderdark text-muted hover:text-taboo hover:border-taboo/40 shrink-0">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 0V4a1 1 0 011-1h2a1 1 0 011 1v2"/></svg>
+                                   </button>`
+                              : ''
+                          }
+                        </div>
+
+                        <div class="flex flex-wrap gap-1.5">
+                          ${card.forbidden
+                            .map(
+                              (fw) => `
+                              <span class="px-2 py-0.5 rounded-lg bg-obsidian border border-borderdark text-[11px] font-semibold text-muted">
+                                ⊘ ${escapeHTML(fw)}
+                              </span>
+                            `
+                            )
+                            .join('')}
+                        </div>
+                      </div>
+                    `
+                    )
+                    .join('')
+            }
+          </div>
+        </div>
+      `;
+    }
+
+    function updateDeckSearch(val) {
+      state.deckSearch = val;
+      renderDeckScreen();
+    }
+
+    function setDeckFilter(filter) {
+      SoundEngine.playTap();
+      state.deckFilter = filter;
+      state.confirmDeleteId = null;
+      renderDeckScreen();
+    }
+
+    function promptDeleteCustomCard(id) {
+      SoundEngine.playTap();
+      state.confirmDeleteId = id;
+      renderDeckScreen();
+    }
+
+    function cancelDeleteCustomCard() {
+      state.confirmDeleteId = null;
+      renderDeckScreen();
+    }
+
+    function deleteCustomCard(id) {
+      SoundEngine.playTaboo();
+      state.customCards = state.customCards.filter(c => c.id !== id);
+      state.confirmDeleteId = null;
+      state.drawQueueSignature = '';
+      SafeStorage.set('taboo_custom_cards_v1', state.customCards);
+      showToast('Custom card deleted', 'error');
+      render();
+    }
+
+    /**
+     * ============================================================================
+     * 12. CUSTOM DECK JSON EXPORT & IMPORT MODAL
+     * ============================================================================
+     */
+    function openDeckJsonModal() {
+      SoundEngine.playTap();
+      const jsonStr = JSON.stringify(state.customCards, null, 2);
+      openModal(`
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-display font-bold text-lg text-offwhite">Backup & Share Custom Deck</h3>
+              <p class="text-xs text-muted">${state.customCards.length} custom cards stored locally</p>
+            </div>
+            <button type="button" onclick="closeModal()" class="w-8 h-8 rounded-full bg-elevated border border-borderdark flex items-center justify-center text-muted hover:text-offwhite">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="exportCustomDeckJSON()"
+              class="btn-press py-2.5 px-3 rounded-xl bg-electric text-obsidian font-bold text-xs uppercase tracking-wider">
+              Download .JSON
+            </button>
+            <button type="button" onclick="copyCustomDeckJSON()"
+              class="btn-press py-2.5 px-3 rounded-xl bg-elevated border border-borderdark text-offwhite font-bold text-xs uppercase tracking-wider">
+              Copy JSON
+            </button>
+          </div>
+
+          <div class="border-t border-borderdark pt-3 space-y-2">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-electric">
+              Import Cards from JSON File
+            </label>
+            <input type="file" accept=".json,application/json" onchange="handleImportJsonFile(event)"
+              class="block w-full text-xs text-muted file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-elevated file:text-electric hover:file:bg-obsidian cursor-pointer" />
+          </div>
+
+          <textarea id="json-export-area" readonly rows="4"
+            class="w-full p-2.5 rounded-xl bg-obsidian border border-borderdark text-[11px] font-mono text-muted focus:outline-none">${escapeHTML(jsonStr)}</textarea>
+        </div>
+      `);
+    }
+
+    function exportCustomDeckJSON() {
+      SoundEngine.playTap();
+      try {
+        const dataStr = JSON.stringify(state.customCards, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'taboo-custom-deck.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast('Exported taboo-custom-deck.json', 'success');
+      } catch (e) {
+        copyCustomDeckJSON();
+      }
+    }
+
+    function copyCustomDeckJSON() {
+      const area = document.getElementById('json-export-area');
+      if (!area) return;
+      area.select();
+      area.setSelectionRange(0, 99999);
+      try {
+        document.execCommand('copy');
+        showToast('Custom deck JSON copied to clipboard!', 'success');
+      } catch (e) {
+        showToast('Select the text box above to copy', 'error');
+      }
+    }
+
+    function handleImportJsonFile(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (!Array.isArray(parsed)) throw new Error('Invalid format');
+
+          const existingWords = new Set(getAllCards().map(c => c.word.toUpperCase()));
+          let addedCount = 0;
+
+          parsed.forEach((item, idx) => {
+            if (!item || typeof item.word !== 'string' || !Array.isArray(item.forbidden)) return;
+            const cleanWord = item.word.trim().toUpperCase();
+            const cleanLevel = CEFR_LEVELS.includes(item.level) ? item.level : 'B1';
+            const cleanForbidden = item.forbidden
+              .map(f => String(f || '').trim().toUpperCase())
+              .filter(Boolean)
+              .slice(0, 5);
+
+            if (cleanWord && cleanForbidden.length >= 3 && !existingWords.has(cleanWord)) {
+              existingWords.add(cleanWord);
+              state.customCards.unshift({
+                id: `custom-imp-${Date.now()}-${idx}`,
+                level: cleanLevel,
+                word: cleanWord,
+                forbidden: cleanForbidden,
+                isCustom: true
+              });
+              addedCount += 1;
+            }
+          });
+
+          SafeStorage.set('taboo_custom_cards_v1', state.customCards);
+          state.drawQueueSignature = '';
+          closeModal();
+          SoundEngine.playCorrect();
+          showToast(`Imported ${addedCount} new custom cards!`, 'success');
+          render();
+        } catch (err) {
+          showToast('Invalid JSON deck file format', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    /**
+     * ============================================================================
+     * 13. MAIN RENDER CONTROLLER & EVENT LISTENERS
+     * ============================================================================
+     */
+    function render() {
+      updateHeaderAndNav();
+      updateHeaderInstallButton();
+
+      switch (state.screen) {
+        case 'setup':
+          renderSetupScreen();
+          break;
+        case 'ready':
+          renderReadyScreen();
+          break;
+        case 'play':
+          renderPlayScreen();
+          break;
+        case 'summary':
+          renderSummaryScreen();
+          break;
+        case 'victory':
+          renderVictoryScreen();
+          break;
+        case 'deck':
+          renderDeckScreen();
+          break;
+        default:
+          renderSetupScreen();
+      }
+    }
+
+    // Header & Nav Bindings
+    document.getElementById('btn-mute').addEventListener('click', () => {
+      SoundEngine.toggleMute();
+      updateHeaderAndNav();
+    });
+
+    document.getElementById('btn-install-header').addEventListener('click', handleInstallClick);
+
+    document.getElementById('brand-btn').addEventListener('click', () => {
+      if (state.screen === 'play' || state.screen === 'ready' || state.screen === 'summary') {
+        confirmQuitMatch();
+      } else {
+        SoundEngine.playTap();
+        state.screen = 'setup';
+        render();
+      }
+    });
+
+    document.getElementById('nav-play').addEventListener('click', () => {
+      if (state.screen === 'setup') return;
+      SoundEngine.playTap();
+      state.screen = 'setup';
+      render();
+    });
+
+    document.getElementById('nav-deck').addEventListener('click', () => {
+      if (state.screen === 'deck') return;
+      SoundEngine.playTap();
+      state.screen = 'deck';
+      render();
+    });
+
+    // Keyboard shortcuts for desktop/tablet playability
+    window.addEventListener('keydown', (e) => {
+      if (state.screen !== 'play' || state.isPaused) return;
+      if (e.target && ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+      if (e.key === 'ArrowRight' || e.key === 'Enter') {
+        e.preventDefault();
+        recordCardAction('correct');
+      } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        e.preventDefault();
+        recordCardAction('taboo');
+      } else if (e.key === 'ArrowDown' || e.key === ' ') {
+        e.preventDefault();
+        recordCardAction('skip');
+      }
+    });
+
+    // Initial boot
+    window.addEventListener('DOMContentLoaded', () => {
+      render();
+    });
+  </script>
+</body>
+</html>
